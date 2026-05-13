@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Files — Zappy</title>
+</head>
+<body>
+    <h1>Upload File</h1>
+
+    <form action="/files" method="post" enctype="multipart/form-data">
+        <input type="file" name="file" required>
+        <input type="number" name="expiration_hours" value="1" min="1">
+        <input type="password" name="password" placeholder="Password (optional)">
+        <label>
+            <input type="checkbox" name="burn" value="true"> Burn after download
+        </label>
+        <button type="submit">Upload</button>
+    </form>
+
+    {% if file_url %}
+    <div>
+        <p>File uploaded! Share this link:</p>
+        <input type="text" value="{{ file_url }}" readonly>
+        <button onclick="copyLink()">Copy</button>
+    </div>
+    {% endif %}
+
+    {% if file %}
+    <div>
+        <h2>{{ file.original_name }}</h2>
+        {% if file.size < 1048576 %}
+            <p>Size: {{ (file.size / 1024) | round(2) }} KB</p>
+        {% else %}
+            <p>Size: {{ (file.size / 1048576) | round(2) }} MB</p>
+        {% endif %}
+        <p>Type: {{ file.content_type }}</p>
+        {% if file.expires_at %}
+        <p>Expires: {{ file.expires_at[:10] }}</p>
+        {% endif %}
+        <a href="/f/{{ file_id }}/download">Download</a>
+    </div>
+    {% endif %}
+
+    {% if error %}
+    <p>{{ error }}</p>
+    {% if error == "wrong password" %}
+    <form action="/f/{{ file_id }}" method="get">
+        <input type="password" name="password" placeholder="Enter password">
+        <button type="submit">Unlock</button>
+    </form>
+    {% endif %}
+    {% endif %}
+
+    <script>
+    function copyLink() {
+        var input = document.querySelector('input[readonly]');
+        input.select();
+        document.execCommand('copy');
+    }
+    </script>
+</body>
+</html>

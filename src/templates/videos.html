@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Videos — Zappy</title>
+</head>
+<body>
+    <h1>Upload Video</h1>
+
+    <form action="/videos" method="post" enctype="multipart/form-data">
+        <input type="file" name="file" required>
+        <input type="number" name="expiration_hours" value="1" min="1">
+        <input type="password" name="password" placeholder="Password (optional)">
+        <label>
+            <input type="checkbox" name="burn" value="true"> Burn after download
+        </label>
+        <button type="submit">Upload</button>
+    </form>
+
+    {% if video_url %}
+    <div>
+        <p>Video uploaded! Share this link:</p>
+        <input type="text" value="{{ video_url }}" readonly>
+        <button onclick="copyLink()">Copy</button>
+    </div>
+    {% endif %}
+
+    {% if video %}
+    <div>
+        <video controls width="100%">
+            <source src="/v/{{ video_id }}/stream" type="video/mp4">
+        </video>
+        <h2>{{ video.original_name }}</h2>
+        {% if video.size < 1048576 %}
+            <p>Size: {{ (video.size / 1024) | round(2) }} KB</p>
+        {% else %}
+            <p>Size: {{ (video.size / 1048576) | round(2) }} MB</p>
+        {% endif %}
+        <p>Type: {{ video.content_type }}</p>
+        {% if video.expires_at %}
+        <p>Expires: {{ video.expires_at[:10] }}</p>
+        {% endif %}
+        <a href="/v/{{ video_id }}/download">Download</a>
+    </div>
+    {% endif %}
+
+    {% if error %}
+    <p>{{ error }}</p>
+    {% if error == "wrong password" %}
+    <form action="/v/{{ video_id }}" method="get">
+        <input type="password" name="password" placeholder="Enter password">
+        <button type="submit">Unlock</button>
+    </form>
+    {% endif %}
+    {% endif %}
+
+    <script>
+    function copyLink() {
+        var input = document.querySelector('input[readonly]');
+        input.select();
+        document.execCommand('copy');
+    }
+    </script>
+</body>
+</html>

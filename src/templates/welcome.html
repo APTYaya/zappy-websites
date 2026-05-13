@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Zappy</title>
+    <link rel="stylesheet" href="/frontend/css/welcome.css">
+</head>
+<body>
+    <h1>Zappy</h1>
+
+    {% if authenticated %}
+    <nav>
+        <a href="/paste">Paste</a>
+        <a href="/files">Files</a>
+        <a href="/videos">Videos</a>
+    </nav>
+    {% else %}
+    <form action="/auth" method="post">
+        <input type="text" name="token" placeholder="Enter your token">
+        <button type="submit">Enter</button>
+    </form>
+    {% if error %}
+    <p>{{ error }}</p>
+    {% endif %}
+    {% endif %}
+</body>
+</html>
