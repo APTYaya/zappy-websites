@@ -1,7 +1,4 @@
-auth_db.json
-files_db.json
-pastes_db.json
-videos_db.json
+src/backend/data/*.json
 __pycache__/
 *.pyc
 venv/
