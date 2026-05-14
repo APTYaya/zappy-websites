@@ -1,16 +1,23 @@
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse
-from src.backend.routes import pastes, files, videos, auth
+from src.backend.routes import pastes, files, videos, auth, upload
 from src.backend.utils.auth import validate_token
 from src.backend.utils.database import init_db
+from src.backend.utils.templates import templates
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
 
 app = FastAPI()
+app.state.max_upload_size = None
 init_db()
 
 app.mount("/static", StaticFiles(directory="src/frontend"), name="static")
-templates = Jinja2Templates(directory="src/templates")
+
+def get_username_from_request(request: Request):
+    token = request.cookies.get("auth_token")
+    return validate_token(token) if token else None
+
+templates.env.globals["get_username"] = get_username_from_request
 
 PROTECTED = [
     "/paste",
@@ -33,3 +40,4 @@ app.include_router(auth.router)
 app.include_router(pastes.router)
 app.include_router(files.router)
 app.include_router(videos.router)
+app.include_router(upload.rotuer)

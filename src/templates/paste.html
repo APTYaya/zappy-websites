@@ -1,133 +1,102 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Zappy Paste</title>
+{% extends "base.html" %}
 
-  <link rel="stylesheet" href="/static/css/base.css">
-</head>
+{% block title %}
+  {% if paste %}View Paste{% else %}New Paste{% endif %} — Zappy
+{% endblock %}
 
-<body>
+{% block content %}
 
-<div id="stars"></div>
+{% if paste %}
+  <!-- ── View paste ── -->
+  <div class="page-heading">
+    <p>pastebin</p>
+    <h2>Viewing <span>paste</span></h2>
+  </div>
 
-<header>
-  <h1>Z<span>appy</span></h1>
+  <div class="box" style="max-width: 720px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+      <span class="label" style="margin: 0;">{{ paste.language }}</span>
+      <div style="display: flex; gap: 0.5rem;">
+        <a href="/p/{{ paste_id }}/raw" class="btn btn-sm">Raw</a>
+        <button class="btn btn-sm" onclick="copyContent()">Copy</button>
+      </div>
+    </div>
+    <pre style="white-space: pre-wrap; word-break: break-word; font-size: 0.85rem; line-height: 1.7; color: #c8d8f0;">{{ paste.content }}</pre>
+  </div>
 
-  <nav>
-    <a href="/">Home</a>
-    <a href="/files">Files</a>
-    <a href="/videos">Videos</a>
-  </nav>
-</header>
+{% elif error %}
+  <!-- ── Error state ── -->
+  <div class="page-heading">
+    <p>pastebin</p>
+    <h2>Something went <span>wrong</span></h2>
+  </div>
+  <div class="box">
+    <p class="error" style="margin: 0;">{{ error }}</p>
+  </div>
 
-<main>
+{% else %}
+  <!-- ── New paste form ── -->
+  <div class="page-heading">
+    <p>pastebin</p>
+    <h2>New <span>paste</span></h2>
+  </div>
 
-  {% if mode == "create" %}
-
-  <div class="token-box">
-    <h2>Create Paste</h2>
-
+  <div class="box" style="max-width: 720px;">
     <form action="/paste" method="post">
+      <label class="label">Content</label>
+      <textarea name="content" placeholder="Paste your text here..."></textarea>
 
-      <textarea
-        name="content"
-        placeholder="Paste your text here..."
-        rows="16"
-        style="
-          width:100%;
-          background: rgba(0,0,0,0.4);
-          border:1px solid rgba(126,184,247,0.2);
-          color:#e0e0f0;
-          padding:1rem;
-          resize:vertical;
-          margin-bottom:1rem;
-          font-family:'JetBrains Mono', monospace;
-        "
-      ></textarea>
-
+      <label class="label">Language</label>
       <select name="language">
         <option value="plain">Plain Text</option>
         <option value="python">Python</option>
         <option value="javascript">JavaScript</option>
+        <option value="bash">Bash</option>
+        <option value="json">JSON</option>
+        <option value="html">HTML</option>
+        <option value="css">CSS</option>
       </select>
 
+      <label class="label">Expiration (hours)</label>
       <input type="number" name="expiration_hours" value="1" min="1">
 
-      <input type="password" name="password" placeholder="Password (optional)">
+      <label class="label">Password (optional)</label>
+      <input type="password" name="password" placeholder="Leave blank for no password">
 
-      <label>
+      <label class="checkbox-row">
         <input type="checkbox" name="burn" value="true">
         Burn after read
       </label>
 
-      <button type="submit">Create Paste</button>
-
+      <button type="submit" class="btn">Create Paste</button>
     </form>
 
     {% if paste_url %}
-    <div style="margin-top:1rem;">
-      <p>Paste created!</p>
-
-      <input type="text" value="{{ paste_url }}" readonly>
-
-      <button onclick="copyLink()">Copy</button>
+    <div id="url-box" style="margin-top: 1.5rem;">
+      <label class="label">Your paste link</label>
+      <div style="display: flex; gap: 0.5rem;">
+        <input type="text" id="paste-url" value="{{ paste_url }}" readonly style="margin: 0; flex: 1;">
+        <button class="btn btn-sm" onclick="copyLink()">Copy</button>
+      </div>
     </div>
     {% endif %}
   </div>
+{% endif %}
 
-  {% endif %}
+{% endblock %}
 
-  {% if mode == "view" %}
-
-  <div class="token-box">
-    <h2>{{ paste.language }}</h2>
-
-    <pre style="
-      white-space: pre-wrap;
-      overflow-x:auto;
-      margin-top:1rem;
-    ">{{ paste.content }}</pre>
-  </div>
-
-  {% endif %}
-
-  {% if mode == "locked" %}
-
-  <div class="token-box">
-    <h2>Password Required</h2>
-
-    <form action="/p/{{ paste_id }}" method="get">
-      <input
-        type="password"
-        name="password"
-        placeholder="Enter password"
-      >
-
-      <button type="submit">Unlock</button>
-    </form>
-  </div>
-
-  {% endif %}
-
-  {% if mode == "error" %}
-
-  <div class="token-box">
-    <h2>{{ error }}</h2>
-  </div>
-
-  {% endif %}
-
-</main>
-
+{% block extra_js %}
 <script>
-function copyLink() {
-  const input = document.querySelector('input[readonly]');
-  input.select();
-  document.execCommand('copy');
-}
-</script>
+  function copyContent() {
+    const content = document.querySelector('pre').innerText;
+    navigator.clipboard.writeText(content);
+  }
 
-</body>
-</html>
+  function copyLink() {
+    const input = document.getElementById('paste-url');
+    navigator.clipboard.writeText(input.value).then(() => {
+      document.getElementById('url-box').style.display = 'none';
+    });
+  }
+</script>
+{% endblock %}

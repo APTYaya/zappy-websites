@@ -14,10 +14,11 @@ from fastapi.templating import Jinja2Templates
 
 from src.backend.utils.files import save_file, load_file
 from src.backend.utils.cleanup import delete_file
+from src.backend.utils.templates import templates
 
 router = APIRouter()
 
-templates = Jinja2Templates(directory="src/templates")
+
 
 
 @router.get("/files")

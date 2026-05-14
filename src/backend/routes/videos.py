@@ -25,10 +25,11 @@ from src.backend.utils.videos import (
 )
 
 from src.backend.utils.cleanup import delete_video
+from src.backend.utils.templates import templates
 
 router = APIRouter()
 
-templates = Jinja2Templates(directory="src/templates")
+
 
 
 @router.get("/videos")

@@ -1,63 +1,150 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Files — Zappy</title>
-</head>
-<body>
-    <h1>Upload File</h1>
+{% extends "base.html" %}
 
-    <form action="/files" method="post" enctype="multipart/form-data">
-        <input type="file" name="file" required>
-        <input type="number" name="expiration_hours" value="1" min="1">
-        <input type="password" name="password" placeholder="Password (optional)">
-        <label>
-            <input type="checkbox" name="burn" value="true"> Burn after download
-        </label>
-        <button type="submit">Upload</button>
+{% block title %}
+  {% if file %}Download File{% else %}Upload File{% endif %} — Zappy
+{% endblock %}
+
+{% block content %}
+
+{% if file %}
+  <!-- ── File detail view ── -->
+  <div class="page-heading">
+    <p>file sharing</p>
+    <h2>Ready to <span>download</span></h2>
+  </div>
+
+  <div class="box">
+    <div style="margin-bottom: 1.5rem;">
+      <label class="label">Filename</label>
+      <p style="font-size: 0.9rem; color: #c8d8f0;">{{ file.original_name }}</p>
+    </div>
+    <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+      <div style="flex: 1;">
+        <label class="label">Size</label>
+        <p style="font-size: 0.9rem; color: #c8d8f0;" id="file-size">{{ file.size }} bytes</p>
+      </div>
+      <div style="flex: 1;">
+        <label class="label">Type</label>
+        <p style="font-size: 0.9rem; color: #c8d8f0;">{{ file.mimetype }}</p>
+      </div>
+    </div>
+    <a href="/f/{{ file_id }}/download" class="btn" style="display: block; text-align: center; text-decoration: none;">Download</a>
+  </div>
+
+{% elif error %}
+  <!-- ── Error state ── -->
+  <div class="page-heading">
+    <p>file sharing</p>
+    <h2>Something went <span>wrong</span></h2>
+  </div>
+  <div class="box">
+    <p class="error" style="margin: 0;">{{ error }}</p>
+  </div>
+
+{% else %}
+  <!-- ── Upload form ── -->
+  <div class="page-heading">
+    <p>file sharing</p>
+    <h2>Upload a <span>file</span></h2>
+  </div>
+
+  <div class="box">
+    <form action="/files" method="post" enctype="multipart/form-data" id="upload-form">
+      <label class="label">File</label>
+      <input type="file" name="file" id="file-input" style="margin-bottom: 1rem;">
+
+      <label class="label">Expiration (hours)</label>
+      <input type="number" name="expiration_hours" value="1" min="1">
+
+      <label class="label">Password (optional)</label>
+      <input type="password" name="password" placeholder="Leave blank for no password">
+
+      <label class="checkbox-row">
+        <input type="checkbox" name="burn" value="true">
+        Burn after download
+      </label>
+
+      <div id="progress-box" style="display: none; margin-bottom: 1rem;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 0.4rem;">
+          <span class="label" style="margin: 0;" id="progress-pct">0%</span>
+          <span class="label" style="margin: 0;" id="progress-speed">0 KB/s</span>
+        </div>
+        <div style="width: 100%; height: 4px; background: rgba(126,184,247,0.1); border-radius: 2px;">
+          <div id="progress-bar" style="height: 4px; width: 0%; background: #7eb8f7; border-radius: 2px; transition: width 0.2s;"></div>
+        </div>
+      </div>
+
+      <button type="submit" class="btn" id="upload-btn">Upload</button>
     </form>
 
     {% if file_url %}
-    <div>
-        <p>File uploaded! Share this link:</p>
-        <input type="text" value="{{ file_url }}" readonly>
-        <button onclick="copyLink()">Copy</button>
+    <div id="url-box" style="margin-top: 1.5rem;">
+      <label class="label">Your file link</label>
+      <div style="display: flex; gap: 0.5rem;">
+        <input type="text" id="file-url" value="{{ file_url }}" readonly style="margin: 0; flex: 1;">
+        <button class="btn btn-sm" onclick="copyLink()">Copy</button>
+      </div>
     </div>
     {% endif %}
+  </div>
+{% endif %}
 
-    {% if file %}
-    <div>
-        <h2>{{ file.original_name }}</h2>
-        {% if file.size < 1048576 %}
-            <p>Size: {{ (file.size / 1024) | round(2) }} KB</p>
-        {% else %}
-            <p>Size: {{ (file.size / 1048576) | round(2) }} MB</p>
-        {% endif %}
-        <p>Type: {{ file.content_type }}</p>
-        {% if file.expires_at %}
-        <p>Expires: {{ file.expires_at[:10] }}</p>
-        {% endif %}
-        <a href="/f/{{ file_id }}/download">Download</a>
-    </div>
-    {% endif %}
+{% endblock %}
 
-    {% if error %}
-    <p>{{ error }}</p>
-    {% if error == "wrong password" %}
-    <form action="/f/{{ file_id }}" method="get">
-        <input type="password" name="password" placeholder="Enter password">
-        <button type="submit">Unlock</button>
-    </form>
-    {% endif %}
-    {% endif %}
+{% block extra_js %}
+<script>
+  const form = document.getElementById('upload-form');
+  if (form) {
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const formData = new FormData(form);
+      const xhr = new XMLHttpRequest();
+      const progressBox = document.getElementById('progress-box');
+      const progressBar = document.getElementById('progress-bar');
+      const progressPct = document.getElementById('progress-pct');
+      const progressSpeed = document.getElementById('progress-speed');
+      let startTime = Date.now();
+      let lastLoaded = 0;
 
-    <script>
-    function copyLink() {
-        var input = document.querySelector('input[readonly]');
-        input.select();
-        document.execCommand('copy');
-    }
-    </script>
-</body>
-</html>
+      xhr.upload.addEventListener('progress', function(e) {
+        if (!e.lengthComputable) return;
+        progressBox.style.display = 'block';
+        const pct = Math.round((e.loaded / e.total) * 100);
+        progressBar.style.width = pct + '%';
+        progressPct.textContent = pct + '%';
+        const elapsed = (Date.now() - startTime) / 1000;
+        const speed = (e.loaded - lastLoaded) / elapsed / 1024;
+        lastLoaded = e.loaded;
+        startTime = Date.now();
+        progressSpeed.textContent = speed.toFixed(1) + ' KB/s';
+      });
+
+      xhr.addEventListener('load', function() {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(xhr.responseText, 'text/html');
+        const urlBox = doc.getElementById('url-box');
+        if (urlBox) {
+            document.getElementById('upload-form').insertAdjacentElement('afterend', urlBox);
+        }
+      });
+
+      xhr.open('POST', '/files');
+      xhr.send(formData);
+    });
+  }
+
+  function copyLink() {
+    const input = document.getElementById('file-url');
+    navigator.clipboard.writeText(input.value).then(() => {
+      document.getElementById('url-box').style.display = 'none';
+    });
+  }
+
+  const sizeEl = document.getElementById('file-size');
+  if (sizeEl) {
+    const bytes = parseInt(sizeEl.textContent);
+    if (bytes > 1048576) sizeEl.textContent = (bytes / 1048576).toFixed(2) + ' MB';
+    else if (bytes > 1024) sizeEl.textContent = (bytes / 1024).toFixed(1) + ' KB';
+  }
+</script>
+{% endblock %}

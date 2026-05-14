@@ -5,10 +5,11 @@ from fastapi.templating import Jinja2Templates
 
 from src.backend.utils.pastes import save_paste, load_paste
 from src.backend.utils.cleanup import delete_paste
+from src.backend.utils.templates import templates
 
 router = APIRouter()
 
-templates = Jinja2Templates(directory="src/templates")
+
 
 
 @router.get("/paste")
