@@ -1,4 +1,4 @@
-src/backend/data/*.json
+src/backend/data/zappy.db
 __pycache__/
 *.pyc
 venv/
