@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zappy Paste</title>
+
+  <link rel="stylesheet" href="/static/css/base.css">
+</head>
+
+<body>
+
+<div id="stars"></div>
+
+<header>
+  <h1>Z<span>appy</span></h1>
+
+  <nav>
+    <a href="/">Home</a>
+    <a href="/files">Files</a>
+    <a href="/videos">Videos</a>
+  </nav>
+</header>
+
+<main>
+
+  {% if mode == "create" %}
+
+  <div class="token-box">
+    <h2>Create Paste</h2>
+
+    <form action="/paste" method="post">
+
+      <textarea
+        name="content"
+        placeholder="Paste your text here..."
+        rows="16"
+        style="
+          width:100%;
+          background: rgba(0,0,0,0.4);
+          border:1px solid rgba(126,184,247,0.2);
+          color:#e0e0f0;
+          padding:1rem;
+          resize:vertical;
+          margin-bottom:1rem;
+          font-family:'JetBrains Mono', monospace;
+        "
+      ></textarea>
+
+      <select name="language">
+        <option value="plain">Plain Text</option>
+        <option value="python">Python</option>
+        <option value="javascript">JavaScript</option>
+      </select>
+
+      <input type="number" name="expiration_hours" value="1" min="1">
+
+      <input type="password" name="password" placeholder="Password (optional)">
+
+      <label>
+        <input type="checkbox" name="burn" value="true">
+        Burn after read
+      </label>
+
+      <button type="submit">Create Paste</button>
+
+    </form>
+
+    {% if paste_url %}
+    <div style="margin-top:1rem;">
+      <p>Paste created!</p>
+
+      <input type="text" value="{{ paste_url }}" readonly>
+
+      <button onclick="copyLink()">Copy</button>
+    </div>
+    {% endif %}
+  </div>
+
+  {% endif %}
+
+  {% if mode == "view" %}
+
+  <div class="token-box">
+    <h2>{{ paste.language }}</h2>
+
+    <pre style="
+      white-space: pre-wrap;
+      overflow-x:auto;
+      margin-top:1rem;
+    ">{{ paste.content }}</pre>
+  </div>
+
+  {% endif %}
+
+  {% if mode == "locked" %}
+
+  <div class="token-box">
+    <h2>Password Required</h2>
+
+    <form action="/p/{{ paste_id }}" method="get">
+      <input
+        type="password"
+        name="password"
+        placeholder="Enter password"
+      >
+
+      <button type="submit">Unlock</button>
+    </form>
+  </div>
+
+  {% endif %}
+
+  {% if mode == "error" %}
+
+  <div class="token-box">
+    <h2>{{ error }}</h2>
+  </div>
+
+  {% endif %}
+
+</main>
+
+<script>
+function copyLink() {
+  const input = document.querySelector('input[readonly]');
+  input.select();
+  document.execCommand('copy');
+}
+</script>
+
+</body>
+</html>

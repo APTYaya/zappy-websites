@@ -1,27 +1,98 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Zappy</title>
-    <link rel="stylesheet" href="/frontend/css/welcome.css">
-</head>
-<body>
-    <h1>Zappy</h1>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zappy</title>
 
-    {% if authenticated %}
-    <nav>
-        <a href="/paste">Paste</a>
-        <a href="/files">Files</a>
-        <a href="/videos">Videos</a>
-    </nav>
-    {% else %}
+  <link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600&display=swap"
+    rel="stylesheet"
+  />
+
+  <link rel="stylesheet" href="/static/css/welcome.css" />
+</head>
+
+<body>
+
+<div id="stars"></div>
+
+<header>
+  <h1>Z<span>appy</span></h1>
+
+  {% if username %}
+  <nav>
+    {% if request.url.path != '/paste' %}
+    <a href="/paste">Paste</a>
+    {% endif %}
+
+    {% if request.url.path != '/files' %}
+    <a href="/files">Files</a>
+    {% endif %}
+
+    {% if request.url.path != '/videos' %}
+    <a href="/videos">Videos</a>
+    {% endif %}
+  </nav>
+  {% endif %}
+</header>
+
+<main>
+  <div class="welcome-text">
+    <p>self-hosted file sharing</p>
+    <h2>
+        <span>Welcome{% if username %},{% endif %}</span>{% if username %}<span class="name">{{ username }}</span>{% endif %}
+    </h2>
+  </div>
+
+  {% if not username %}
+  <div class="token-box">
+    <label>Access Token</label>
+
     <form action="/auth" method="post">
-        <input type="text" name="token" placeholder="Enter your token">
-        <button type="submit">Enter</button>
+      <input
+        type="text"
+        name="token"
+        placeholder="tok_••••••••••••••••"
+        autocomplete="off"
+      />
+
+      <button type="submit">Enter</button>
     </form>
+
     {% if error %}
-    <p>{{ error }}</p>
+    <p class="error">{{ error }}</p>
     {% endif %}
-    {% endif %}
+  </div>
+  {% endif %}
+</main>
+
+<script>
+  const container = document.getElementById('stars');
+  const count = 180;
+
+  for (let i = 0; i < count; i++) {
+    const star = document.createElement('div');
+
+    star.classList.add('star');
+
+    const size = Math.random() * 2.2 + 0.4;
+    const dur = (Math.random() * 4 + 2).toFixed(1);
+    const baseOpacity = (Math.random() * 0.4 + 0.1).toFixed(2);
+
+    star.style.cssText = `
+      width: ${size}px;
+      height: ${size}px;
+      top: ${Math.random() * 100}%;
+      left: ${Math.random() * 100}%;
+      --dur: ${dur}s;
+      --base-opacity: ${baseOpacity};
+      animation-delay: ${(Math.random() * 5).toFixed(1)}s;
+    `;
+
+    container.appendChild(star);
+  }
+</script>
+
 </body>
 </html>

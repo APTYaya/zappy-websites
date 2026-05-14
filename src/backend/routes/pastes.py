@@ -1,7 +1,6 @@
 from typing import Optional
 
 from fastapi import APIRouter, Request, Form
-
 from fastapi.templating import Jinja2Templates
 
 from src.backend.utils.pastes import save_paste, load_paste
@@ -15,8 +14,11 @@ templates = Jinja2Templates(directory="src/templates")
 @router.get("/paste")
 def paste_editor(request: Request):
     return templates.TemplateResponse(
-        "paste_new.html",
-        {"request": request},
+        "paste.html",
+        {
+            "request": request,
+            "mode": "create",
+        },
     )
 
 
@@ -40,9 +42,10 @@ def create_paste(
     paste_url = f"http://{request.headers['host']}/p/{paste_id}"
 
     return templates.TemplateResponse(
-        "paste_new.html",
+        "paste.html",
         {
             "request": request,
+            "mode": "create",
             "paste_url": paste_url,
         },
     )
@@ -61,19 +64,23 @@ def view_paste(
             delete_paste(paste_id)
 
         return templates.TemplateResponse(
-            "paste_view.html",
+            "paste.html",
             {
                 "request": request,
+                "mode": "locked" if error == "wrong password" else "error",
                 "error": error,
                 "paste_id": paste_id,
             },
         )
+
     if paste["burn"]:
         delete_paste(paste_id)
+
     return templates.TemplateResponse(
-        "paste_view.html",
+        "paste.html",
         {
             "request": request,
+            "mode": "view",
             "paste": paste,
             "paste_id": paste_id,
         },

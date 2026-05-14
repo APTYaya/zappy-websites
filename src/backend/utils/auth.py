@@ -25,7 +25,9 @@ def validate_token(token):
     cursor.execute("SELECT * FROM auth WHERE token = ?", (token,))
     row = cursor.fetchone()
     conn.close()
-    return row is not None
+    if row is None:
+        return None
+    return row["name"]
 
 def revoke_token(token):
     conn = get_connection()

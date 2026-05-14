@@ -14,30 +14,30 @@ templates = Jinja2Templates(directory="src/templates")
 @router.get("/")
 def welcome(request: Request):
     token = request.cookies.get("auth_token")
-    authenticated = validate_token(token) if token else False
+    username = validate_token(token) if token else None
     return templates.TemplateResponse("welcome.html", {
         "request": request,
-        "authenticated": authenticated,
+        "username": username,
     })
 
 @router.post("/auth")
 def authenticate(request: Request, token: str = Form(...)):
-    is_valid = validate_token(token)
-    if not is_valid:
+    username = validate_token(token)
+    if not username:
         return templates.TemplateResponse("welcome.html", {
             "request": request,
-            "authenticated": False,
+            "username": None,
             "error": "Invalid auth token",
         })
     response = templates.TemplateResponse("welcome.html", {
         "request": request,
-        "authenticated": True,
+        "username": username,
     })
     response.set_cookie(
         key="auth_token",
         value=token,
         httponly=True,
-        max_age= 60 * 60 * 24 * 30,
+        max_age=60 * 60 * 24 * 365,
     )
     return response
 

@@ -23,9 +23,10 @@ async def auth_middleware(request: Request, call_next):
     path = request.url.path
     if any(path.startswith(p) for p in PROTECTED):
         token = request.cookies.get("auth_token")
-        print(f"Path: {path}, Token: {token}, Valid: {validate_token(token) if token else False}")
-        if not token or not validate_token(token):
+        name = validate_token(token) if token else None
+        if not name:
             return RedirectResponse(url="/")
+        request.state.username = name
     return await call_next(request)
 
 app.include_router(auth.router)
