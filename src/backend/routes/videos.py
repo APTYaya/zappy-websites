@@ -101,6 +101,7 @@ def video_page(
 
 @router.get("/v/{video_id}/download")
 def download_video(
+    request: Request,
     video_id: str,
     background_tasks: BackgroundTasks,
     password: Optional[str] = None,

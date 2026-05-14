@@ -240,9 +240,19 @@
   }
 
   function copyLink() {
-    const input = document.getElementById('file-url');
+    const input = document.getElementById('video-url');
+
     navigator.clipboard.writeText(input.value).then(() => {
-      document.getElementById('url-box').style.display = 'none';
+      const box = document.getElementById('url-box');
+      const btn = box.querySelector('button');
+
+      const old = btn.textContent;
+      btn.textContent = 'Copied!';
+
+      setTimeout(() => {
+        btn.textContent = old;
+        box.remove();
+      }, 800);
     });
   }
 
