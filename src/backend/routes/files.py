@@ -44,7 +44,7 @@ async def create_upload_file(
         burn=burn,
     )
 
-    file_url = f"http://{request.headers['host']}/f/{file_id}"
+    file_url = f"https://{request.headers['host']}/f/{file_id}"
 
     return templates.TemplateResponse(
         "files.html",

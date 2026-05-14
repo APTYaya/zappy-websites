@@ -55,7 +55,7 @@ async def create_upload_video(
         burn=burn,
     )
 
-    video_url = f"http://{request.headers['host']}/v/{video_id}"
+    video_url = f"https://{request.headers['host']}/v/{video_id}"
 
     return templates.TemplateResponse(
         "videos.html",

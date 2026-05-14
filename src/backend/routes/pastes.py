@@ -40,7 +40,7 @@ def create_paste(
         burn=burn,
     )
 
-    paste_url = f"http://{request.headers['host']}/p/{paste_id}"
+    paste_url = f"https://{request.headers['host']}/p/{paste_id}"
 
     return templates.TemplateResponse(
         "paste.html",
