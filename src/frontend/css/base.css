@@ -213,7 +213,7 @@ input[type="checkbox"]::before {
   height: 8px;
   transform: scale(0);
   transition: 0.1s ease-in-out;
-  background-color: #0b0f1a; /* dark checkmark */
+  background-color: #0b0f1a; 
   clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0, 43% 62%);
 }
 
