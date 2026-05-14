@@ -24,4 +24,11 @@
   {% endif %}
 </div>
 {% endif %}
+{% if not username %}
+<div style="max-width: 520px; width: 100%; margin-top: 1rem; text-align: center;">
+  <p style="font-size: 0.7rem; letter-spacing: 0.1em; color: #3a4a6a;">
+    Want access? DM <span style="color: #7eb8f7;">users.csv</span> on Discord.
+  </p>
+</div>
+{% endif %}
 {% endblock %}

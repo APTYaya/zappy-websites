@@ -1,0 +1,12 @@
+services:
+  zappy:
+    build: .
+    container_name: zappy-website
+    restart: unless-stopped
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./uploads:/app/uploads
+      - ./src/backend/data:/app/src/backend/data
+    environment:
+      - PYTHONUNBUFFERED=1
