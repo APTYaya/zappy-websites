@@ -6,10 +6,17 @@ from src.backend.utils.auth import validate_token
 from src.backend.utils.database import init_db
 from src.backend.utils.templates import templates
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from src.backend.utils.cleanup import cleanup_temp_uploads, cleanup_loop
+import threading
 
 app = FastAPI()
 app.state.max_upload_size = None
-init_db()
+
+@app.on_event("startup")
+async def startup_event():
+    init_db()
+    cleanup_temp_uploads()
+    threading.Thread(target=cleanup_loop, daemon=True).start()
 
 app.mount("/static", StaticFiles(directory="src/frontend"), name="static")
 
@@ -40,4 +47,4 @@ app.include_router(auth.router)
 app.include_router(pastes.router)
 app.include_router(files.router)
 app.include_router(videos.router)
-app.include_router(upload.rotuer)
+app.include_router(upload.router)

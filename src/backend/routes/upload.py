@@ -20,7 +20,7 @@ async def upload_chunk(
     chunk_number: int = Form(...),
     file_type: str = Form(...),
     chunk: UploadFile = File(...),
-);
+):
     chunk_dir = os.path.join(TEMP_DIR, upload_id)
     os.makedirs(chunk_dir, exist_ok=True)
 
@@ -29,7 +29,7 @@ async def upload_chunk(
     with open(chunk_path, "wb") as f:
         f.write(contents)
 
-    return JSONResponse({"status": "ok" "chunk": chunk_number})
+    return JSONResponse({"status": "ok", "chunk": chunk_number})
 
 @router.get("/upload/status/{upload_id}")
 def upload_status(upload_id: str):
