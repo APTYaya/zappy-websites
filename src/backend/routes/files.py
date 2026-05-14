@@ -18,7 +18,9 @@ from src.backend.utils.templates import templates
 
 router = APIRouter()
 
-
+def is_bot(request: Request):
+    ua = request.headers.get("user-agent", "").lower()
+    return "bot" in ua or "discord" in ua or "slack" in ua
 
 
 @router.get("/files")
@@ -100,7 +102,7 @@ def download_file(
 
         return {"error": error}
 
-    if file["burn"]:
+    if file["burn"] and not is_bot(request):
         background_tasks.add_task(delete_file, file_id)
 
     return FileResponse(

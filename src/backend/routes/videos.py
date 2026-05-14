@@ -29,7 +29,9 @@ from src.backend.utils.templates import templates
 
 router = APIRouter()
 
-
+def is_bot(request: Request):
+    ua = request.headers.get("user-agent", "").lower()
+    return "bot" in ua or "discord" in ua or "slack" in ua
 
 
 @router.get("/videos")
@@ -111,7 +113,7 @@ def download_video(
 
         return {"error": error}
 
-    if video["burn"]:
+    if video["burn"] and not is_bot(request):
         background_tasks.add_task(delete_video, video_id)
 
     return FileResponse(
@@ -166,7 +168,7 @@ async def stream_video(
         headers = {
             "Accept-Ranges": "bytes",
             "Content-Length": str(file_size),
-            "Content-Type": video["mimetpye"],
+            "Content-Type": video["mimetype"],
         }
 
     return StreamingResponse(

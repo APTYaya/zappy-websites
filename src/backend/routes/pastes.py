@@ -9,7 +9,9 @@ from src.backend.utils.templates import templates
 
 router = APIRouter()
 
-
+def is_bot(request: Request):
+    ua = request.headers.get("user-agent", "").lower()
+    return "bot" in ua or "discord" in ua or "slack" in ua
 
 
 @router.get("/paste")
@@ -74,7 +76,7 @@ def view_paste(
             },
         )
 
-    if paste["burn"]:
+    if paste["burn"] and not is_bot(request):
         delete_paste(paste_id)
 
     return templates.TemplateResponse(
