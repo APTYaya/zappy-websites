@@ -177,10 +177,48 @@ textarea {
 }
 
 input[type="checkbox"] {
-  width: auto;
-  margin-bottom: 0;
-  accent-color: #7eb8f7;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  width: 16px;
+  height: 16px;
+
+  border: 1px solid #2a3550;
+  background-color: #0f1422; /* match your dark UI */
+  border-radius: 4px;
+
+  display: grid;
+  place-content: center;
+
   cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+/* hover */
+input[type="checkbox"]:hover {
+  border-color: #7eb8f7;
+}
+
+/* checked state */
+input[type="checkbox"]:checked {
+  background-color: #7eb8f7;
+  border-color: #7eb8f7;
+}
+
+/* checkmark */
+input[type="checkbox"]::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  transform: scale(0);
+  transition: 0.1s ease-in-out;
+  background-color: #0b0f1a; /* dark checkmark */
+  clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0, 43% 62%);
+}
+
+input[type="checkbox"]:checked::before {
+  transform: scale(1);
 }
 
 /* ── Buttons ── */
