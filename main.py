@@ -4,8 +4,10 @@ from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse
 from src.backend.routes import pastes, files, videos, auth
 from src.backend.utils.auth import validate_token
+from src.backend.utils.database import init_db
 
 app = FastAPI()
+init_db()
 
 app.mount("/static", StaticFiles(directory="src/frontend"), name="static")
 templates = Jinja2Templates(directory="src/templates")

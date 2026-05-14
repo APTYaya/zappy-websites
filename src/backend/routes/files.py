@@ -99,12 +99,12 @@ def download_file(
 
         return {"error": error}
 
-    if file.get("burn"):
+    if file["burn"]:
         background_tasks.add_task(delete_file, file_id)
 
     return FileResponse(
-        path=f"uploads/files/{file['stored_file_name']}",
+        path=f"uploads/files/{file['filename']}",
         filename=file["original_name"],
-        media_type=file["content_type"],
+        media_type=file["mimetype"],
         background=background_tasks,
     )

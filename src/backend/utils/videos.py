@@ -6,33 +6,12 @@ import hashlib
 
 from pathlib import Path
 from datetime import datetime, timedelta
+from src.backend.utils.database import get_connection
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
 
-DB_PATH = BASE_DIR / "src/backend/data/videos_db.json"
-
 UPLOAD_DIR = BASE_DIR / "uploads/videos"
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
-
-
-def load_db():
-    if os.path.exists(DB_PATH):
-        try:
-            with open(DB_PATH, "r") as video:
-                data = json.load(video)
-
-                if isinstance(data, dict):
-                    return data
-
-        except json.JSONDecodeError:
-            pass
-
-    return {}
-
-
-def save_db(video_db):
-    with open(DB_PATH, "w") as video:
-        json.dump(video_db, video, indent=2)
 
 
 async def save_video(file, expiration_hours=1, password=None, burn=False):
@@ -47,8 +26,6 @@ async def save_video(file, expiration_hours=1, password=None, burn=False):
         contents = await file.read()
         await f.write(contents)
 
-    video_db = load_db()
-
     expires_at = None
 
     if expiration_hours:
@@ -61,34 +38,32 @@ async def save_video(file, expiration_hours=1, password=None, burn=False):
     if password:
         password_hash = hashlib.sha256(password.encode()).hexdigest()
 
-    video_db[video_id] = {
-        "original_name": file.filename,
-        "stored_video_name": stored_video_name,
-        "content_type": file.content_type,
-        "size": len(contents),
-        "expires_at": expires_at,
-        "password_hash": password_hash,
-        "burn": burn,
-    }
-
-    save_db(video_db)
-
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO videos (id, filename, title, mimetype, size, created_at, expires_at, password_hash, burn)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (video_id, stored_video_name, file.filename, file.content_type, len(contents), datetime.utcnow().isoformat(), expires_at, password_hash, burn))
+    conn.commit()
+    conn.close()
     return video_id
 
 
 def load_video(video_id, password=None):
-    video_db = load_db()
-
-    video = video_db.get(video_id)
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM videos WHERE id = ?",(video_id,))
+    video = cursor.fetchone()
+    conn.close()
 
     if video is None:
         return None, "not found"
 
-    if video.get("expires_at"):
+    if video["expires_at"]:
         if datetime.utcnow() > datetime.fromisoformat(video["expires_at"]):
             return None, "expired"
 
-    if video.get("password_hash"):
+    if video["password_hash"]:
         if (
             not password
             or hashlib.sha256(password.encode()).hexdigest()

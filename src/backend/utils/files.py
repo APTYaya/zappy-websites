@@ -1,4 +1,3 @@
-import json
 import os
 import secrets
 import aiofiles
@@ -6,34 +5,12 @@ import hashlib
 
 from pathlib import Path
 from datetime import datetime, timedelta
+from src.backend.utils.database import get_connection
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
 
-DB_PATH = BASE_DIR / "src/backend/data/files_db.json"
-
 UPLOAD_DIR = BASE_DIR / "uploads/files"
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
-
-
-def load_db():
-    if os.path.exists(DB_PATH):
-        try:
-            with open(DB_PATH, "r") as file:
-                data = json.load(file)
-
-                if isinstance(data, dict):
-                    return data
-
-        except json.JSONDecodeError:
-            pass
-
-    return {}
-
-
-def save_db(file_db):
-    with open(DB_PATH, "w") as file:
-        json.dump(file_db, file, indent=2)
-
 
 async def save_file(file, expiration_hours=1, password=None, burn=False):
     file_id = secrets.token_urlsafe(8)
@@ -47,8 +24,6 @@ async def save_file(file, expiration_hours=1, password=None, burn=False):
         contents = await file.read()
         await f.write(contents)
 
-    file_db = load_db()
-
     expires_at = None
 
     if expiration_hours:
@@ -61,34 +36,32 @@ async def save_file(file, expiration_hours=1, password=None, burn=False):
     if password:
         password_hash = hashlib.sha256(password.encode()).hexdigest()
 
-    file_db[file_id] = {
-        "original_name": file.filename,
-        "stored_file_name": stored_file_name,
-        "content_type": file.content_type,
-        "size": len(contents),
-        "expires_at": expires_at,
-        "password_hash": password_hash,
-        "burn": burn,
-    }
-
-    save_db(file_db)
-
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO files (id, filename, original_name, mimetype, size, created_at, expires_at, password_hash, burn)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (file_id, stored_file_name, file.filename, file.content_type, len(contents), datetime.utcnow().isoformat(), expires_at, password_hash, burn))
+    conn.commit()
+    conn.close()
     return file_id
 
 
 def load_file(file_id, password=None):
-    file_db = load_db()
-
-    file = file_db.get(file_id)
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM files WHERE id = ?",(file_id,))
+    file = cursor.fetchone()
+    conn.close()
 
     if file is None:
         return None, "not found"
 
-    if file.get("expires_at"):
+    if file["expires_at"]:
         if datetime.utcnow() > datetime.fromisoformat(file["expires_at"]):
             return None, "expired"
 
-    if file.get("password_hash"):
+    if file["password_hash"]:
         if (
             not password
             or hashlib.sha256(password.encode()).hexdigest()

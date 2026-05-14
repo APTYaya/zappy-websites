@@ -1,49 +1,52 @@
-import os
-import json 
 import secrets
 from datetime import datetime
-
-DB_PATH = "src/backend/data/auth_db.json"
-
-
-
-def load_db():
-    if os.path.exists(DB_PATH):
-        with open(DB_PATH, "r") as file:
-            return json.load(file)
-    return {}
-
-def save_db(file_db):
-    with open(DB_PATH, "w") as file:
-        json.dump(file_db, file, indent=2)
+from src.backend.utils.database import get_connection
 
 def generate_token(name):
-    auth_db = load_db()
-    if len(auth_db) >=50:
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM auth")
+    count = cursor.fetchone()[0]
+    if count >= 50:
+        conn.close()
         return None, "max users reached"
     token = f"tok_{secrets.token_urlsafe(16)}"
-    auth_db[token] = {
-        "name": name,
-        "created_at": datetime.utcnow().isoformat(),
-    }
-    save_db(auth_db)
+    cursor.execute("""
+        INSERT INTO auth (token, name, created_at)
+        VALUES (?, ?, ?)
+    """, (token, name, datetime.utcnow().isoformat()))
+    conn.commit()
+    conn.close()
     return token, None
 
 def validate_token(token):
-    auth_db = load_db()
-    return token in auth_db
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM auth WHERE token = ?", (token,))
+    row = cursor.fetchone()
+    conn.close()
+    return row is not None
 
 def revoke_token(token):
-    auth_db = load_db()
-    if token not in auth_db:
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM auth WHERE token = ?", (token,))
+    row = cursor.fetchone()
+    if row is None:
+        conn.close()
         return None, "token not found"
-    del auth_db[token]
-    save_db(auth_db)
+    cursor.execute("DELETE FROM auth WHERE token = ?", (token,))
+    conn.commit()
+    conn.close()
     return True, None
 
 def list_tokens():
-    auth_db = load_db()
-    return [ 
-        {"token": token, "name": data["name"], "created_at": data["created_at"]}
-        for token, data in auth_db.items()
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM auth")
+    rows = cursor.fetchall()
+    conn.close()
+    return [
+        {"token": row["token"], "name": row["name"], "created_at": row["created_at"]}
+        for row in rows
     ]

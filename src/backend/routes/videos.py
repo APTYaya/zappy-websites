@@ -110,13 +110,13 @@ def download_video(
 
         return {"error": error}
 
-    if video.get("burn"):
+    if video["burn"]:
         background_tasks.add_task(delete_video, video_id)
 
     return FileResponse(
-        path=f"uploads/videos/{video['stored_video_name']}",
-        filename=video["original_name"],
-        media_type=video["content_type"],
+        path=f"uploads/videos/{video['filename']}",
+        filename=video["title"],
+        media_type=video["mimetype"],
         background=background_tasks,
     )
 
@@ -135,7 +135,7 @@ async def stream_video(
 
         return {"error": error}
 
-    file_path = f"uploads/videos/{video['stored_video_name']}"
+    file_path = f"uploads/videos/{video['filename']}"
 
     file_size = os.path.getsize(file_path)
 
@@ -153,7 +153,7 @@ async def stream_video(
             "Content-Range": f"bytes {start}-{end}/{file_size}",
             "Accept-Ranges": "bytes",
             "Content-Length": str(end - start + 1),
-            "Content-Type": video["content_type"],
+            "Content-Type": video["mimetype"],
         }
 
     else:
@@ -165,7 +165,7 @@ async def stream_video(
         headers = {
             "Accept-Ranges": "bytes",
             "Content-Length": str(file_size),
-            "Content-Type": video["content_type"],
+            "Content-Type": video["mimetpye"],
         }
 
     return StreamingResponse(

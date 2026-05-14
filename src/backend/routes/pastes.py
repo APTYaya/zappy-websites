@@ -68,7 +68,8 @@ def view_paste(
                 "paste_id": paste_id,
             },
         )
-
+    if paste["burn"]:
+        delete_paste(paste_id)
     return templates.TemplateResponse(
         "paste_view.html",
         {
@@ -94,7 +95,7 @@ def raw_paste(
 
     content = paste["content"]
 
-    if paste.get("burn"):
+    if paste["burn"]:
         delete_paste(paste_id)
 
     return content
