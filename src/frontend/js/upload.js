@@ -5,7 +5,7 @@ export async function uploadChunked(file, formData, config, ui) {
   uploadId = crypto.randomUUID();
   localStorage.setItem("upload_id", uploadId);
   }
-  
+
   const totalChunks = Math.ceil(file.size / config.chunkSize);
 
   const statusRes = await fetch(`/upload/status/${uploadId}`);
@@ -72,6 +72,8 @@ export async function uploadChunked(file, formData, config, ui) {
 
   const res = await fetch(config.completeEndpoint, { method: "POST", body: completeForm });
   const data = await res.json();
+
+  localStorage.removeItem("upload_id");
 
   return data.url;
 }

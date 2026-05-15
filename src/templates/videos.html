@@ -102,7 +102,21 @@ const config = {
   completeEndpoint: "/upload/complete"
 };
 
-window.addEventListener("DOMContentLoaded", () => {
+window.addEventListener("DOMContentLoaded", async () => {
+  
+  const savedId = localStorage.getItem("upload_id");
+  if (savedId) {
+    const res = await fetch(`/upload/session/${savedId}`);
+    const data = await res.json();
+    if (data.status === "active" && data.received_chunks.length > 0) {
+      const resume = confirm(`You have an incomplete upload (${data.received_chunks.length} chunks saved). Resume it?`);
+      if (!resume) {
+        localStorage.removeItem("upload_id");
+      }
+    } else {
+      localStorage.removeItem("upload_id");
+    }
+  }
   const form = document.getElementById('upload-form');
   if (!form) return;
 

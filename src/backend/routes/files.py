@@ -105,6 +105,11 @@ def download_file(
     if file["burn"] and not is_bot(request):
         background_tasks.add_task(delete_file, file_id)
 
+    conn = get_connection()
+    conn.execute("UPDATE files SET last_download_at = ? WHERE id = ?", (datetime.utcnow().isoformat(), file_id))
+    conn.commit()
+    conn.close()
+
     return FileResponse(
         path=f"uploads/files/{file['filename']}",
         filename=file["original_name"],

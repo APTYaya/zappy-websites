@@ -93,7 +93,7 @@
 
 {% block extra_js %}
 <script type="module">
-import { uploadChunked } from "/static/js/upload.js";
+import { uploadChunked, } from "/static/js/upload.js";
 
 const config = {
   chunkSize: 95 * 1024 * 1024,
@@ -102,7 +102,22 @@ const config = {
   completeEndpoint: "/upload/complete"
 };
 
-window.addEventListener("DOMContentLoaded", () => {
+window.addEventListener("DOMContentLoaded", async () => {
+
+    const savedId = localStorage.getItem("upload_id");
+    if (savedId) {
+    const res = await fetch(`/upload/session/${savedId}`);
+    const data = await res.json();
+    if (data.status === "active" && data.received_chunks.length > 0) {
+      const resume = confirm(`You have an incomplete upload (${data.received_chunks.length} chunks saved). Resume it?`);
+      if (!resume) {
+        localStorage.removeItem("upload_id");
+      }
+    } else {
+      localStorage.removeItem("upload_id");
+    }
+  }
+
   document.getElementById('upload-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     e.stopImmediatePropagation();

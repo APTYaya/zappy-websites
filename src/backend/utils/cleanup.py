@@ -63,21 +63,28 @@ def cleanup_temp_uploads():
 def cleanup_expired():
     conn = get_connection()
     cursor = conn.cursor()
-
     now = datetime.utcnow().isoformat()
-
-    cursor.execute("SELECT id FROM files WHERE expires_at <= ?", (now,))
+    
+    cursor.execute("""
+        SELECT id FROM files 
+        WHERE expires_at <= ? 
+        AND (last_download_at IS NULL OR last_download_at <= datetime(?, '-2 minutes'))
+    """, (now, now))
     for row in cursor.fetchall():
         delete_file(row["id"])
-
-    cursor.execute("SELECT id FROM videos WHERE expires_at <= ?", (now,))
+    
+    cursor.execute("""
+        SELECT id FROM videos 
+        WHERE expires_at <= ? 
+        AND (last_download_at IS NULL OR last_download_at <= datetime(?, '-2 minutes'))
+    """, (now, now))
     for row in cursor.fetchall():
         delete_video(row["id"])
-
+    
     cursor.execute("SELECT id FROM pastes WHERE expires_at <= ?", (now,))
     for row in cursor.fetchall():
         delete_paste(row["id"])
-
+    
     conn.close()
 
 

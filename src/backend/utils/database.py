@@ -64,3 +64,24 @@ def init_db():
     conn.close()
 
 init_db()
+
+def migrate_db():
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("PRAGMA table_info(files)")
+    file_columns = [row["name"] for row in cursor.fetchall()]
+    
+    cursor.execute("PRAGMA table_info(videos)")
+    video_columns = [row["name"] for row in cursor.fetchall()]
+    
+    if "last_download_at" not in file_columns:
+        cursor.execute("ALTER TABLE files ADD COLUMN last_download_at TEXT")
+    
+    if "last_download_at" not in video_columns:
+        cursor.execute("ALTER TABLE videos ADD COLUMN last_download_at TEXT")
+    
+    conn.commit()
+    conn.close()
+
+migrate_db()
