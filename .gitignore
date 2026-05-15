@@ -2,3 +2,5 @@ src/backend/data/zappy.db
 __pycache__/
 *.pyc
 venv/
+.dockerignore
+/uploads 

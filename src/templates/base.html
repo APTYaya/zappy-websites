@@ -61,5 +61,31 @@
 
 {% block extra_js %}{% endblock %}
 
+<script>
+function formatSize(bytes) {
+  const gb = 1024 * 1024 * 1024;
+  const mb = 1024 * 1024;
+  const kb = 1024;
+
+  if (!bytes && bytes !== 0) return "";
+  if (bytes >= gb) return (bytes / gb).toFixed(2) + " GB";
+  if (bytes >= mb) return (bytes / mb).toFixed(2) + " MB";
+  if (bytes >= kb) return (bytes / kb).toFixed(2) + " KB";
+  return bytes + " bytes";
+}
+
+function applyFileSizeFormatting() {
+  const el = document.getElementById("video-size") || document.getElementById("file-size");
+  if (!el) return;
+
+  const size = Number(el.dataset.size || el.textContent);
+  if (isNaN(size)) return;
+
+  el.textContent = formatSize(size);
+}
+
+window.addEventListener("DOMContentLoaded", applyFileSizeFormatting);
+</script>
+
 </body>
 </html>
