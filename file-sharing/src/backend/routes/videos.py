@@ -17,7 +17,7 @@ from fastapi.responses import (
 )
 
 from fastapi.templating import Jinja2Templates
-
+from datetime import datetime, timedelta
 from src.backend.utils.videos import (
     save_video,
     load_video,
@@ -26,7 +26,7 @@ from src.backend.utils.videos import (
 
 from src.backend.utils.cleanup import delete_video
 from src.backend.utils.templates import templates
-
+from src.backend.utils.database import get_connection
 router = APIRouter()
 
 def is_bot(request: Request):
@@ -118,7 +118,7 @@ def download_video(
         background_tasks.add_task(delete_video, video_id)
 
     conn = get_connection()
-    conn.execute("UPDATE files SET last_download_at = ? WHERE id = ?", (datetime.utcnow().isoformat(), file_id))
+    conn.execute("UPDATE files SET last_download_at = ? WHERE id = ?", (datetime.utcnow().isoformat(), video_id))
     conn.commit()
     conn.close()
 
